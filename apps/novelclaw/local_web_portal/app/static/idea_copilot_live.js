@@ -126,17 +126,15 @@
 
   function init(root) {
     if (!root) return;
-    if (root.dataset.liveInitialized === 'true') return;
     const form = root.querySelector('[data-idea-reply-form]');
     const feed = root.querySelector('[data-idea-feed]');
     if (!form || !feed) return;
-    root.dataset.liveInitialized = 'true';
     const layout = root.dataset.layout || "dashboard";
     const sessionId = root.dataset.sessionId || "";
     const labels = {
       you: root.dataset.labelYou || "You",
       thinking: root.dataset.labelThinking || "Thinking",
-      analysisTitle: root.dataset.labelAnalysisTitle || "NovelClaw analysis",
+      analysisTitle: root.dataset.labelAnalysisTitle || "WriteClaw analysis",
       nextQuestions: root.dataset.labelNextQuestions || "Next questions",
       currentBrief: root.dataset.labelCurrentBrief || "Current writing brief",
       nextAnswers: root.dataset.labelNextAnswers || "Suggested next answers:",
@@ -144,8 +142,8 @@
       noConversation: root.dataset.labelNoConversation || "No conversation yet.",
       emptyTitle: root.dataset.labelEmptyTitle || "Welcome",
       emptyBody: root.dataset.labelEmptyBody || "Start a session.",
-      continuing: root.dataset.labelContinuing || "NovelClaw is continuing...",
-      runStarted: root.dataset.labelRunStarted || "NovelClaw started the run. Refreshing the workspace...",
+      continuing: root.dataset.labelContinuing || "WriteClaw is continuing...",
+      runStarted: root.dataset.labelRunStarted || "WriteClaw started the run. Refreshing the workspace...",
     };
     const textarea = form.querySelector('textarea[name="reply"]');
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -153,8 +151,6 @@
     let pollErrorCount = 0;
     let recoveryRedirect = false;
     let pollTicks = 0;
-    const MIN_PENDING_MS = 900;
-    const POST_SUCCESS_STATUS_MS = 1400;
 
     function scrollFeedToBottom() {
       if (!feed) return;
@@ -216,10 +212,6 @@
       node.hidden = false;
       node.className = `console-alert ${kind === 'error' ? 'error' : 'ok'}`;
       node.textContent = text;
-    }
-
-    function sleep(ms) {
-      return new Promise((resolve) => window.setTimeout(resolve, ms));
     }
 
     async function readPayload(response) {
@@ -298,7 +290,7 @@
             const waitForAssistant = forceUntilAssistant && !payload.final_job_id && latestRole === 'user';
             if (waitForAssistant) {
               const syncingText = pollTicks >= 20
-                ? `${labels.continuing} ${document.documentElement.lang.toLowerCase().startsWith('zh') ? '鍥炲宸茬敓鎴愶紝姝ｅ湪鍚屾鍒板綋鍓嶅伐浣滃彴鈥? : 'The reply is still syncing into this workspace...'}`
+                ? `${labels.continuing} ${document.documentElement.lang.toLowerCase().startsWith('zh') ? '回复已生成，正在同步到当前工作台…' : 'The reply is still syncing into this workspace...'}`
                 : labels.continuing;
               setStatus('ok', syncingText);
               ensurePendingVisual();
@@ -320,11 +312,11 @@
         } catch (error) {
           pollErrorCount += 1;
           if (pollErrorCount <= 8) {
-            setStatus('ok', `${labels.continuing} ${document.documentElement.lang.toLowerCase().startsWith('zh') ? '姝ｅ湪閲嶈繛瀹炴椂鐘舵€佲€? : 'Reconnecting live state...'}`);
+            setStatus('ok', `${labels.continuing} ${document.documentElement.lang.toLowerCase().startsWith('zh') ? '正在重连实时状态…' : 'Reconnecting live state...'}`);
             return;
           }
           if (pollErrorCount <= 16) {
-            setStatus('ok', document.documentElement.lang.toLowerCase().startsWith('zh') ? '鐘舵€佸悓姝ュ紓甯革紝姝ｅ湪寮哄埗鍒锋柊褰撳墠宸ヤ綔鍙扳€? : 'State sync is unstable. Refreshing the workspace...');
+            setStatus('ok', document.documentElement.lang.toLowerCase().startsWith('zh') ? '状态同步异常，正在强制刷新当前工作台…' : 'State sync is unstable. Refreshing the workspace...');
             forceRefreshToSession();
             return;
           }
@@ -336,9 +328,8 @@
       }, 900);
     }
 
-    async function handleSubmit(event) {
+    form.addEventListener('submit', async function (event) {
       event.preventDefault();
-      event.stopPropagation();
       const reply = textarea ? String(textarea.value || '').trim() : '';
       if (!reply) {
         setStatus('error', 'Reply cannot be empty');
@@ -347,12 +338,10 @@
       const payload = new FormData(form);
       setStatus('ok', '');
       setBusy(true);
-      const submitStartedAt = Date.now();
       feed.querySelector('[data-pending-row="1"]')?.remove();
       feed.insertAdjacentHTML('beforeend', renderUserMessage({ role: 'user', content: reply }, layout, labels));
       if (feed.lastElementChild) feed.lastElementChild.setAttribute('data-optimistic-user', '1');
       appendPending(feed, layout, labels);
-      setStatus('ok', labels.continuing);
       scrollFeedToBottom();
       if (textarea) textarea.value = '';
       try {
@@ -374,21 +363,13 @@
           ensurePendingVisual();
           startPolling({ forceUntilAssistant: true, maxTicks: 30 });
         } else {
-          const elapsed = Date.now() - submitStartedAt;
-          const remainingPending = Math.max(0, MIN_PENDING_MS - elapsed);
-          if (remainingPending > 0) {
-            await sleep(remainingPending);
-          }
           if (refreshWorkspaceWhenRunStarts(data)) {
             return;
           }
           renderMessages(feed, data.messages, layout, labels, true);
           scrollFeedToBottom();
           animateAssistant(feed, data.latest_turn);
-          setStatus('ok', labels.continuing);
-          window.setTimeout(function () {
-            setStatus('ok', '');
-          }, POST_SUCCESS_STATUS_MS);
+          setStatus('ok', '');
           setBusy(false);
         }
       } catch (error) {
@@ -397,11 +378,7 @@
         setStatus('error', error);
         setBusy(false);
       }
-    }
-
-    form.addEventListener('submit', handleSubmit);
-    form.__ideaLiveSubmitBound = true;
-    form.__ideaLiveHandleSubmit = handleSubmit;
+    });
 
     if (root.dataset.replyPending === 'true') {
       setBusy(true);
@@ -434,48 +411,4 @@
   }
 
   window.initIdeaCopilotLive = init;
-
-  function autoInit() {
-    document.querySelectorAll('[data-idea-copilot-root]').forEach(init);
-  }
-
-  window.__novelclawReplySubmit = function (form, event) {
-    const root = form ? form.closest('[data-idea-copilot-root]') : null;
-    if (!root) return true;
-    if (root.dataset.liveInitialized !== 'true') {
-      init(root);
-    }
-    if (form && form.__ideaLiveHandleSubmit) {
-      if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      form.__ideaLiveHandleSubmit(event || new Event('submit', { bubbles: true, cancelable: true }));
-      return false;
-    }
-    return true;
-  };
-
-  document.addEventListener('submit', function (event) {
-    const form = event.target;
-    if (!(form instanceof HTMLFormElement)) return;
-    if (!form.matches('[data-idea-reply-form]')) return;
-    const root = form.closest('[data-idea-copilot-root]');
-    if (!root) return;
-    if (root.dataset.liveInitialized !== 'true') {
-      init(root);
-    }
-    if (form.__ideaLiveHandleSubmit) {
-      event.preventDefault();
-      event.stopPropagation();
-      form.__ideaLiveHandleSubmit(event);
-    }
-  }, true);
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', autoInit, { once: true });
-  } else {
-    autoInit();
-  }
 })();
-

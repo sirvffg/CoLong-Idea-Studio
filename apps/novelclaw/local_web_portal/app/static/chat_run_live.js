@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   const appPath = (path) => (typeof window.__appPath === "function" ? window.__appPath(path) : path);
   function esc(value) {
     return String(value == null ? "" : value)

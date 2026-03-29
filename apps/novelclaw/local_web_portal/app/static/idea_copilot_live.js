@@ -439,6 +439,23 @@
     document.querySelectorAll('[data-idea-copilot-root]').forEach(init);
   }
 
+  window.__novelclawReplySubmit = function (form, event) {
+    const root = form ? form.closest('[data-idea-copilot-root]') : null;
+    if (!root) return true;
+    if (root.dataset.liveInitialized !== 'true') {
+      init(root);
+    }
+    if (form && form.__ideaLiveHandleSubmit) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.__ideaLiveHandleSubmit(event || new Event('submit', { bubbles: true, cancelable: true }));
+      return false;
+    }
+    return true;
+  };
+
   document.addEventListener('submit', function (event) {
     const form = event.target;
     if (!(form instanceof HTMLFormElement)) return;

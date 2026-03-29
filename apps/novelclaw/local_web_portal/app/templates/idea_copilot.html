@@ -76,7 +76,7 @@
     </div>
 
     {% if session_data.status == "active" %}
-    <form method="post" action="{{ app_path('/idea-copilot/' ~ session_data.id ~ '/reply') }}" class="form-stack" data-idea-reply-form>
+    <form method="post" action="{{ app_path('/idea-copilot/' ~ session_data.id ~ '/reply') }}" class="form-stack" data-idea-reply-form onsubmit="return window.__novelclawReplySubmit ? window.__novelclawReplySubmit(this, event) : true;">
       <div data-idea-status class="console-alert" hidden></div>
       <div>
         <label>{{ ui_text('继续补充本轮信息', 'Add more details for this round') }}</label>

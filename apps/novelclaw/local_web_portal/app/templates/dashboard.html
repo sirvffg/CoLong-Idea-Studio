@@ -225,7 +225,7 @@
 
           <div class="chat-composer-stack chat-composer-stack--docked">
             {% if chat_session and chat_session.status == 'active' and not compose_new %}
-            <form method="post" action="{{ app_path('/idea-copilot/' ~ chat_session.id ~ '/reply') }}" class="chat-input-form chat-input-form--floating" data-idea-reply-form>
+            <form method="post" action="{{ app_path('/idea-copilot/' ~ chat_session.id ~ '/reply') }}" class="chat-input-form chat-input-form--floating" data-idea-reply-form onsubmit="return window.__novelclawReplySubmit ? window.__novelclawReplySubmit(this, event) : true;">
               <div data-idea-status class="console-alert" hidden></div>
               <textarea name="reply" rows="4" required placeholder="{{ ui_text('继续补充需求、修改方向，或者直接告诉 NovelClaw 下一步做什么。', 'Add details, change direction, or tell NovelClaw what to do next.') }}"></textarea>
               <div class="chat-input-actions">
@@ -268,7 +268,7 @@
   </div>
 </section>
 
-<script src="{{ static_asset_path('idea_copilot_live.js') }}?v=20260330d"></script>
+<script src="{{ static_asset_path('idea_copilot_live.js') }}?v=20260330e"></script>
 <script src="{{ static_asset_path('chat_run_live.js') }}?v=20260330b"></script>
 {% if chat_session %}
 <script>

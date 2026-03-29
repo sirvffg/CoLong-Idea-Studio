@@ -336,8 +336,9 @@
       }, 900);
     }
 
-    form.addEventListener('submit', async function (event) {
+    async function handleSubmit(event) {
       event.preventDefault();
+      event.stopPropagation();
       const reply = textarea ? String(textarea.value || '').trim() : '';
       if (!reply) {
         setStatus('error', 'Reply cannot be empty');
@@ -396,7 +397,11 @@
         setStatus('error', error);
         setBusy(false);
       }
-    });
+    }
+
+    form.addEventListener('submit', handleSubmit);
+    form.__ideaLiveSubmitBound = true;
+    form.__ideaLiveHandleSubmit = handleSubmit;
 
     if (root.dataset.replyPending === 'true') {
       setBusy(true);
@@ -433,6 +438,22 @@
   function autoInit() {
     document.querySelectorAll('[data-idea-copilot-root]').forEach(init);
   }
+
+  document.addEventListener('submit', function (event) {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    if (!form.matches('[data-idea-reply-form]')) return;
+    const root = form.closest('[data-idea-copilot-root]');
+    if (!root) return;
+    if (root.dataset.liveInitialized !== 'true') {
+      init(root);
+    }
+    if (form.__ideaLiveHandleSubmit) {
+      event.preventDefault();
+      event.stopPropagation();
+      form.__ideaLiveHandleSubmit(event);
+    }
+  }, true);
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', autoInit, { once: true });

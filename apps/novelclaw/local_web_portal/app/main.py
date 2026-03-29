@@ -512,7 +512,10 @@ def _is_shared_portal_path(path: str) -> bool:
 
 def _shared_path(path: str) -> str:
     normalized = (path or "").strip() or "/"
-    return normalized if normalized.startswith("/") else f"/{normalized}"
+    normalized = normalized if normalized.startswith("/") else f"/{normalized}"
+    if _is_shared_portal_path(normalized) and settings.shared_portal_url:
+        return f"{settings.shared_portal_url}{normalized}"
+    return normalized
 
 
 def _app_path(path: str) -> str:

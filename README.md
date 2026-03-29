@@ -34,6 +34,7 @@
     <a href="#workflow">Workflow</a> |
     <a href="#quick-start">Quick Start</a> |
     <a href="#claw-mode-guide">Claw Mode Guide</a> |
+    <a href="#architecture">Architecture</a> |
     <a href="#runtime-artifacts">Runtime Artifacts</a>
   </p>
 </div>
@@ -234,6 +235,14 @@ In short: `Models` configures the writing stack, `Chat` starts and steers the se
     </td>
   </tr>
 </table>
+
+## Architecture 🧠
+
+<p align="center">
+  <img src="docs/workflow.png" alt="NovelClaw workflow diagram" width="94%">
+</p>
+
+The architecture links public entry, writing sessions, run execution, manuscript review, and memory-aware continuation into one inspectable loop, so the workspace can support longer projects without collapsing into a single opaque prompt interaction.
 
 ## Runtime Artifacts 📦
 

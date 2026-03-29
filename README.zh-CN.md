@@ -34,6 +34,7 @@
     <a href="#工作流">工作流</a> |
     <a href="#快速开始">快速开始</a> |
     <a href="#claw-mode-guide">Claw 模式操作</a> |
+    <a href="#架构">架构</a> |
     <a href="#运行产物">运行产物</a>
   </p>
 </div>
@@ -234,6 +235,14 @@ http://127.0.0.1:8010/select-mode -> http://127.0.0.1:8012/dashboard
     </td>
   </tr>
 </table>
+
+## 架构 🧠
+
+<p align="center">
+  <img src="docs/workflow.png" alt="NovelClaw 工作流图" width="94%">
+</p>
+
+整个架构把公开入口、写作会话、运行执行、稿件审阅与记忆感知续写连接成一个可检查的闭环，使工作区在面对更长项目时，不会退化成一次性且不透明的 prompt 交互。
 
 ## 运行产物 📦
 
